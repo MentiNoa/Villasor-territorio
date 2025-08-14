@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Mappa Geolocalizzata</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+    .map-button {
+      position: absolute;
+      left: 20px;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+    #clearRouteBtn {
+      bottom: 80px;
+      background-color: #d70000;
+      color: white;
+      font-weight: bold;
+    }
+    #clearRouteBtn:hover {
+      background-color: #a00000;
+    }
+    #updatePositionBtn {
+      bottom: 20px;
+      background-color: white;
+      color: #333;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+    #updatePositionBtn:hover {
+      background-color: #f0f0f0;
+    }
+
+    .leaflet-routing-container {
+      position: fixed !important;
+      bottom: 10px !important;
+      right: 10px !important;
+      top: auto !important;
+      left: auto !important;
+      z-index: 9999;
+      background-color: white;
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      max-width: 300px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    @keyframes pressAnimation {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .pressed {
+      animation: pressAnimation 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="clearRouteBtn" class="map-button">✖</button>
+  <button id="updatePositionBtn" class="map-button">📍</button>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+  <script>
+    let map;
+    let currentMarker;
+    let routingControl;
+    let currentPosition;
+    let watchId;
+
+    function initMap() {
+      map = L.map('map').setView([39.3548, 8.9696], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      L.Control.geocoder({
+        defaultMarkGeocode: false
+      })
+      .on('markgeocode', function(e) {
+        const destination = e.geocode.center;
+
+        if (routingControl) {
+          map.removeControl(routingControl);
+        }
+
+        routingControl = L.Routing.control({
+          waypoints: [currentPosition, destination],
+          routeWhileDragging: true
+        }).addTo(map);
+
+        routingControl.on('routesfound', function() {
+          const instructions = document.querySelectorAll('.leaflet-routing-alt .leaflet-routing-instruction');
+          instructions.forEach((el, index) => {
+            el.style.display = index < 3 ? 'block' : 'none';
+          });
+        });
+      })
+      .addTo(map);
+
+      startTracking();
+    }
+
+    function startTracking() {
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(function (position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          currentPosition = L.latLng(lat, lng);
+
+          if (currentMarker) {
+            currentMarker.setLatLng(currentPosition);
+          } else {
+            currentMarker = L.marker(currentPosition).addTo(map).bindPopup("Posizione attuale").openPopup();
+          }
+
+          map.setView(currentPosition, map.getZoom());
+
+          if (routingControl) {
+            const waypoints = routingControl.getWaypoints();
+            routingControl.setWaypoints([currentPosition, waypoints[1].latLng]);
+          }
+        }, function (error) {
+          alert("Errore nel tracking: " + error.message);
+        }, {
+          enableHighAccuracy: true,
+          maximumAge: 1000,
+          timeout: 10000
+        });
+      } else {
+        alert("Geolocalizzazione non supportata dal browser.");
+      }
+    }
+
+    function updatePositionManually() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          currentPosition = L.latLng(lat, lng);
+
+          if (currentMarker) {
+            currentMarker.setLatLng(currentPosition);
+          } else {
+            currentMarker = L.marker(currentPosition).addTo(map).bindPopup("Posizione attuale").openPopup();
+          }
+
+          map.setView(currentPosition, map.getZoom());
+
+          if (routingControl) {
+            const waypoints = routingControl.getWaypoints();
+            routingControl.setWaypoints([currentPosition, waypoints[1].latLng]);
+          }
+        }, function (error) {
+          alert("Errore nel recupero della posizione: " + error.message);
+        }, {
+          enableHighAccuracy: true,
+          maximumAge: 1000,
+          timeout: 10000
+        });
+      } else {
+        alert("Geolocalizzazione non supportata dal browser.");
+      }
+    }
+
+    function clearRoute() {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+    }
+
+    function animateButton(buttonId) {
+      const btn = document.getElementById(buttonId);
+      btn.classList.add('pressed');
+      setTimeout(() => btn.classList.remove('pressed'), 300);
+    }
+
+    window.addEventListener("load", initMap);
+
+    document.getElementById('clearRouteBtn').addEventListener('click', function () {
+      animateButton('clearRouteBtn');
+      clearRoute();
+    });
+
+    document.getElementById('updatePositionBtn').addEventListener('click', function () {
+      animateButton('updatePositionBtn');
+      updatePositionManually();
+    });
+  </script>
+</body>
+</html>
