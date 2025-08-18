@@ -1,17 +1,11 @@
 # Villasor-territorio-master WIP
 
-📍 Geolocalizzazione in tempo reale	Tracciamento continuo con aggiornamento automatico
+Mappa interattiva con MapLibre
 
-📌 Marker fisso	Nessuna rotazione, icona standard
+Geolocalizzazione manuale
 
-🔎 Ricerca con geocoder	Trova destinazioni e calcola il percorso
+Rotazione automatica in base all’orientamento del dispositivo
 
-🚗 Routing dinamico	Percorso aggiornato in tempo reale
+Routing con OSRM (Open Source Routing Machine)
 
-✖ Bottone "Chiudi percorso"	Rimuove il percorso dalla mappa
-
-📍 Bottone "Aggiorna posizione"	Forza manualmente l’aggiornamento
-
-💥 Animazione al tocco	Feedback visivo sui bottoni
-
-📱 Ottimizzazione mobile	Layout responsive e controlli accessibili
+Pulsanti per aggiornare posizione, avviare e cancellare la navigazione
