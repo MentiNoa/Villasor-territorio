@@ -2,7 +2,7 @@
 
 Mappa interattiva con MapLibre
 
-Geolocalizzazione manuale
+Geolocalizzazione
 
 Rotazione automatica in base all’orientamento del dispositivo
 
