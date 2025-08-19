@@ -1,4 +1,4 @@
-# MiniNav
+# NaviLite
 
 Mappa interattiva leggera con MapLibre/OSM
 
